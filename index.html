@@ -3679,12 +3679,47 @@ Support for this feature MUST be announced by *Callers* (`role := "caller"`), *C
 
 ### Registration Revocation
 
-#### Feature Definition
-
-Actively and forcefully revoke a previously granted registration from a session.
+Feature status: **alpha**
 
 #### Feature Announcement
 
+Support for this feature MUST be announced by *Callees* (role := "callee") and *Dealers* (role := "dealer") via
+
+```
+        HELLO.Details.roles.<role>.features.
+             registration_revocation|bool := true
+```
+
+If the *Callee* does not support registration_revocation, the *Dealer* may still revoke a registration to
+support administrative functionality. In this case, the *Dealer* MUST NOT send an **UNREGISTERED**
+message to the *Callee*. The *Callee* MAY use the registration meta event `wamp.registration.on_unregister`
+to determine whether a session is removed from a registration.
+
+#### Feature Definition
+
+This feature allows a *Dealer* to actively revoke a previously granted registration.
+To achieve this, the existing UNREGISTERED message is extended as described below.
+
+#### Extending UNREGISTERED
+
+When revoking a registration, the router has no request ID to reply to. So it's set to zero and another argument is
+appended to indicate which registration to revoke. Optionally, a reason why the registration was revoked is also appended.
+
+```
+        [UNREGISTERED, 0, Details|dict]
+```
+
+where
+
+ * `Details.registration|bool` MUST be a previously issued registration ID.
+ * `Details.reason|string` MAY provide a reason as to why the registration was revoked.
+
+*Example*
+
+```
+        [67, 0, {"registration": 1293722, "reason": "moving endpoint to other callee"}]
+
+```
 
 ### Procedure Reflection
 
@@ -4481,14 +4516,49 @@ Support for this feature MUST be announced by *Subscribers* (`role := "subscribe
 
 ```
 
-### Registration Revocation
+### Subscription Revocation
 
-#### Feature Definition
-
-Actively and forcefully revoke a previously granted subscription from a session.
+Feature status: **alpha**
 
 #### Feature Announcement
 
+Support for this feature MUST be announced by *Subscribers* (role := "subscriber") and *Brokers* (role := "broker") via
+
+```
+        HELLO.Details.roles.<role>.features.
+             subscription_revocation|bool := true
+```
+
+If the *Subscriber* does not support subscription_revocation, the *Broker* MAY still revoke a subscription to
+support administrative functionality. In this case, the *Broker* MUST NOT send an **UNSUBSCRIBED**
+message to the *Subscriber*. The *Subscriber* MAY use the subscription meta event `wamp.subscription.on_unsubscribe`
+to determine whether a session is removed from a subscription.
+
+#### Feature Definition
+
+This feature allows a *Broker* to actively revoke a previously granted subscription.
+To achieve this, the existing UNSUBSCRIBED message is extended as described below.
+
+#### Extending UNSUBSCRIBED
+
+When revoking a subscription, the router has no request ID to reply to. So it's set to zero and another argument is
+appended to indicate which subscription to revoke. Optionally, a reason why the subscription was revoked is also appended.
+
+```
+        [UNSUBSCRIBED, 0, Details|dict]
+```
+
+where
+
+ * `Details.subscription|bool` MUST be a previously issued subscription ID.
+ * `Details.reason|string` MAY provide a reason as to why the subscription was revoked.
+
+*Example*
+
+```
+        [35, 0, {"subscription": 1293722, "reason": "no longer authorized"}]
+
+```
 
 ### Topic Reflection
 
